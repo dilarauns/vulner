@@ -82,5 +82,5 @@ def analyze_directory(directory_path):
                 analyze_and_fix_code(file_path)
 
 if __name__ == "__main__":
-    directory_path = "your_directory" 
+    directory_path = "your/path/to/directory" 
     analyze_directory(directory_path)
