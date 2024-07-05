@@ -1,0 +1,14 @@
+https://ollama.com download ollama 
+go https://ollama.com/library choose your model I worked with llama3
+open git bash run:
+ollama
+ollama pull model-name
+ollama run model-name
+
+or 
+
+curl -X POST http://localhost:11434/api/generate -d '{
+  "model": "llama3",
+  "prompt":"Why is the sky blue?"
+ }'
+
