@@ -1,12 +1,9 @@
-from langchain_community.llms import Ollama
+import requests 
+import json
 import openai
 import os
 
-
-ollama = Ollama(model="llama3")
-
-
-openai.api_key = 'YOUR_API_KEY'
+openai.api_key = 'your_api_key'
 
 def analyze_code_with_ollama(code):
     prompt = (
@@ -22,8 +19,29 @@ def analyze_code_with_ollama(code):
         "8. Known security vulnerabilities "
         "9. Other potential security vulnerabilities."
     )
-    response = ollama.invoke(prompt + " " + code , server_url="http://127.0.0.1:11434")
-    return response
+    url = "http://localhost:11434/api/generate"  # URL'yi uygun şekilde ayarlayın
+    headers = {"Content-Type": "application/json"}
+    data = {"prompt": prompt + " " + code,
+            "model": "llama3",
+            "created_at": "2023-11-03T15:36:02.583064Z",
+            "stream": False,
+            "done": True,
+            }
+    
+    response = requests.post(url, json=data, headers=headers)
+    
+    if response.status_code == 200:
+        try:
+            response_text = response.text   
+            data = json.loads(response_text)
+            actual_response= data["response"]
+            print(actual_response)
+        except ValueError:
+            print("Response is not in JSON format:", response.text)
+            return None
+    else:
+        print("Request failed with status code:", response.status_code)
+        return response.text
 
 def get_fix_suggestions(vulnerabilities):
     response = openai.ChatCompletion.create(
@@ -44,15 +62,17 @@ def analyze_and_fix_code(file_path):
     with open(file_path, 'r') as file:
         code_content = file.read()
 
-  
     vulnerabilities = analyze_code_with_ollama(code_content)
-    print(f"Security Vulnerabilities in {file_path}:")
-    print(vulnerabilities)
+    
+    if vulnerabilities:
+        print(f"Security Vulnerabilities in {file_path}:")
+        print(vulnerabilities)
 
-
-    fix_suggestions = get_fix_suggestions(vulnerabilities)
-    print(f"Fix Suggestions for {file_path}:")
-    print(fix_suggestions)
+        fix_suggestions = get_fix_suggestions(vulnerabilities)
+        print(f"Fix Suggestions for {file_path}:")
+        print(fix_suggestions)
+    else:
+        print(f"Failed to analyze {file_path}")
 
 def analyze_directory(directory_path):
     for root, _, files in os.walk(directory_path):
@@ -62,5 +82,5 @@ def analyze_directory(directory_path):
                 analyze_and_fix_code(file_path)
 
 if __name__ == "__main__":
-    directory_path = "your_folder_path" 
+    directory_path = "your_directory" 
     analyze_directory(directory_path)
